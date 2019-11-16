@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Android,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="HTTP：HyperText Transfer Protocol 超文本传输协议   HTTP的工作方式 浏览器用户输入地址后回车或点击链接-&amp;gt;浏览器拼装HTTP报文并发送请求给服务器-&amp;gt;服务器处理请求后发送响应报文给浏览器-&amp;gt;浏览器解析响应报文并使用渲染引擎显示到界面">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP的原理和工作机制">
+<meta property="og:url" content="http://yoursite.com/2019/11/04/HTTP的原理和工作机制/index.html">
+<meta property="og:site_name" content="是救不了的患者">
+<meta property="og:description" content="HTTP：HyperText Transfer Protocol 超文本传输协议   HTTP的工作方式 浏览器用户输入地址后回车或点击链接-&amp;gt;浏览器拼装HTTP报文并发送请求给服务器-&amp;gt;服务器处理请求后发送响应报文给浏览器-&amp;gt;浏览器解析响应报文并使用渲染引擎显示到界面">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-11-04T04:00:16.365Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HTTP的原理和工作机制">
+<meta name="twitter:description" content="HTTP：HyperText Transfer Protocol 超文本传输协议   HTTP的工作方式 浏览器用户输入地址后回车或点击链接-&amp;gt;浏览器拼装HTTP报文并发送请求给服务器-&amp;gt;服务器处理请求后发送响应报文给浏览器-&amp;gt;浏览器解析响应报文并使用渲染引擎显示到界面">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/11/04/HTTP的原理和工作机制/">
+
+
+
+
+
+  <title>HTTP的原理和工作机制 | 是救不了的患者</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta custom-logo">
+    
+      <div class="site-meta-headline">
+        <a>
+          <img class="custom-logo-image" src="https://wumingke.github.io/images/avatar.jpg" alt="是救不了的患者">
+        </a>
+      </div>
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">是救不了的患者</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">又不是第一次失败</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/04/HTTP的原理和工作机制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="qinglie">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="是救不了的患者">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">HTTP的原理和工作机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-04T11:27:45+08:00">
+                2019-11-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>HTTP：HyperText Transfer Protocol 超文本传输协议</p>
+</blockquote>
+<ul>
+<li>HTTP的工作方式<ul>
+<li>浏览器<br>用户输入地址后回车或点击链接-&gt;<br>浏览器拼装HTTP报文并发送请求给服务器-&gt;<br>服务器处理请求后发送响应报文给浏览器-&gt;<br>浏览器解析响应报文并使用渲染引擎显示到界面<a id="more"></a></li>
+<li>手机App<br>用户点击或界面自动触发联网请求-&gt;<br>Android代码调用拼装HTTP报文并发送请求到服务器-&gt;<br>服务器处理请求后发送响应报文给手机-&gt;<br>Android代码处理响应报文并作出相应处理<br>&nbsp;</li>
+</ul>
+</li>
+<li>URL转换成报文：<ul>
+<li>URL：<a href="https://wumingke.github.io/images/favicon.ico?v=5.1.2" target="_blank" rel="noopener">https://wumingke.github.io/images/favicon.ico?v=5.1.2</a><br>协议类型：https://<br>服务器地址：wumingke.github.io<br>路径path：/images/favicon.ico?v=5.1.2<br>&nbsp;</li>
+<li>报文：<br>GET&emsp;&emsp;/images/favicon.ico?v=5.1.2&emsp;&emsp;HTTP/1.1<br>Host:wumingke.github.io<br>&nbsp;<br>请求报文格式：method&emsp;&emsp;&emsp;&emsp;path&emsp;&emsp;&emsp;&emsp;HTTPversion<br>请求行&emsp;—GET&emsp;&emsp;&emsp;/images/favicon.ico?v=5.1.2&emsp;&emsp;&emsp;HTTP/1.1<br>Headers—Host:wumingke.github.io<br>Body &emsp;&emsp;&emsp;—<br>&nbsp;<br>响应报文格式：HTTPversion&nbsp;&nbsp;&nbsp;status code&nbsp;&nbsp;&nbsp;status message<br>状态行&nbsp;&nbsp;&nbsp;—HTTP/1.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;200&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OK<br>Headers&nbsp;—content-type:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cache-control:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vary:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;etag:<br>Body&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;—[{…}]</li>
+</ul>
+</li>
+</ul>
+<h4 id="Request-method"><a href="#Request-method" class="headerlink" title="Request method"></a>Request method</h4><p>1、GET<br>&nbsp;&nbsp;&nbsp;&nbsp;获取资源，没有Body<br>2、POST<br>&nbsp;&nbsp;&nbsp;&nbsp;增加或修改资源，有Body<br>3、PUT<br>&nbsp;&nbsp;&nbsp;&nbsp;修改资源，有Body（和POST区别：PUT是幂等的）<br>4、DELETE<br>&nbsp;&nbsp;&nbsp;&nbsp;删除资源，没有Body<br>5、HEAD<br>&nbsp;&nbsp;&nbsp;&nbsp;同GET获取资源，区别在于返回没有报文</p>
+<h4 id="Response-status-code"><a href="#Response-status-code" class="headerlink" title="Response status code"></a>Response status code</h4><p>作用：对结果作出类型化描述<br>1xx：临时性消息<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eg：100（继续发送）、101（正在切换协议）<br>2xx：成功<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eg：200（成功）<br>3xx：重定向（网站迁移，浏览器会根据返回的地址再做一次请求）<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eg：301（永久移动）、302（暂时移动）、304（内容未改变）<br>4xx：客户端错误，请求本身是错误的<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eg：400(请求错误)、401(认证失败)、403(被禁止)、404(找不不到内容)<br>5xx：服务器错误<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eg：500（服务器内部错误）</p>
+<h4 id="Header"><a href="#Header" class="headerlink" title="Header"></a>Header</h4><p>作用：HTTP消息的元数据（metadate，数据的数据）</p>
+<h5 id="Host："><a href="#Host：" class="headerlink" title="Host："></a>Host：</h5><p>服务器主机地址，不是在网络上⽤于寻址的，⽽是在目标服务器上用于定位⼦服务器的。寻找地址在请求发生之前就已经发生了。寻址：获取IP地址。DNS：通过域名获取IP地址。假设在阿里云购买了一个主机，上面运行了四个服务器，一个主机只有一个IP，不同的人输入了不同的Host地址，这个主机通过Host地址转向实际的虚拟主机上，然后通过path在最终实际主机上找资源。</p>
+<h5 id="content-type："><a href="#content-type：" class="headerlink" title="content-type："></a>content-type：</h5><p>Body的类型</p>
+<ul>
+<li>text/html：html文本，用于浏览器访问</li>
+<li>application/x-www-form-urlencoded：普通表单（纯文本表单），encoded URL格式<br>eg：在Retrofit中，当请求是GET时，可以用@Path来配置路径，用@Query来配置请求参数<br>当请求是POST时，普通表单，请求加一个@FormEncoded，然后用@Field来配置请求参数，最终数据用“=”连接键值对，用“&amp;”连接每个数据。这里可以用规范的符号划分每个数据。（@Query配置完数据在path里面，@Field配置完数据在Body里面）</li>
+<li>multipart/form-data：多部分形式，一般用于传输包含二进制文件的多项内容。结果会用content-type中的boundary来划分每个内容用以让服务器知道每个内容是什么（规范的符号相比boundary节约了空间）<br>eg：在Retrofit中，用@MultiPart做请求，用@Part配置请求参数</li>
+<li>application/json：json形式，用于web api的响应或POST/PUT请求<br>eg：retrofit用json上传数据：一个类符合Json的格式，用@Body配置请求参数</li>
+<li>image/jpeg、application/zip…：单文件，用于web api的响应或POST/PUT请求<br>eg：retrofit中用@Body配置请求参数</li>
+</ul>
+<h5 id="content-length："><a href="#content-length：" class="headerlink" title="content-length："></a>content-length：</h5><p>Body的长度（字节）</p>
+<h5 id="Transfer-Encoding-chunked："><a href="#Transfer-Encoding-chunked：" class="headerlink" title="Transfer-Encoding:chunked："></a>Transfer-Encoding:chunked：</h5><p>分块传输，表示Body长度无法确定，content-length不能使用，最后传输0表示内容结束</p>
+<h5 id="Location："><a href="#Location：" class="headerlink" title="Location："></a>Location：</h5><p>重定向的目标URL</p>
+<h5 id="User-Agent："><a href="#User-Agent：" class="headerlink" title="User-Agent："></a>User-Agent：</h5><p>用户代理，声明哪个客户端去做了请求</p>
+<h5 id="Range-Accept-Range："><a href="#Range-Accept-Range：" class="headerlink" title="Range/Accept-Range："></a>Range/Accept-Range：</h5><p>指定Body的返回数据的范围，可用于断点续传、多线程下载</p>
+<h5 id="Cookie-Set-Cookie："><a href="#Cookie-Set-Cookie：" class="headerlink" title="Cookie/Set-Cookie："></a>Cookie/Set-Cookie：</h5><p>发送Cookie/设置Cookie</p>
+<h5 id="Authorization："><a href="#Authorization：" class="headerlink" title="Authorization："></a>Authorization：</h5><p>授权信息</p>
+<h5 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h5><p>Cache和Buffer的区别：<br>Cache：缓存<br>Buffer：缓冲<br>Cache-Control：no-cache（可以缓存，且在下次请求时需确认缓存是否失效）/no-store（不缓存）/max-age（可以缓存，但是有失效日期）/private（私有缓存）/public（共有缓存）<br>Last-Modified：服务器资源最后一次修改时间<br>Etag：资源指纹，用与在使用缓存之前，确认是否有效</p>
+<p>Host和path分开，Host不是给服务器看的，path是给服务器看的</p>
+<p>HTTP1.1和HTTP2.0在格式上差别很大，但是本质上差别不多，区别主要在于HTTP2.0对数据做了压缩</p>
+<h4 id="对RESTful"><a href="#对RESTful" class="headerlink" title="对RESTful"></a>对RESTful</h4><ul>
+<li>使用资源的格式来定义URL</li>
+<li>规范地使用method来定义网络请求操作</li>
+<li>规范地使用status code来表示响应状态</li>
+<li>其它符合HTTP规范的设计准则</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/11/04/触摸反馈原理（1）/" rel="prev" title="触摸反馈原理（1）">
+                触摸反馈原理（1） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="qinglie">
+          <p class="site-author-name" itemprop="name">qinglie</p>
+           
+              <p class="site-description motion-element" itemprop="description">又不是第一次失败</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/WuMingke" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="766190553@qq.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/u/2266844641?is_hot=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Request-method"><span class="nav-number">1.</span> <span class="nav-text">Request method</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Response-status-code"><span class="nav-number">2.</span> <span class="nav-text">Response status code</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Header"><span class="nav-number">3.</span> <span class="nav-text">Header</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Host："><span class="nav-number">3.1.</span> <span class="nav-text">Host：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#content-type："><span class="nav-number">3.2.</span> <span class="nav-text">content-type：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#content-length："><span class="nav-number">3.3.</span> <span class="nav-text">content-length：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Transfer-Encoding-chunked："><span class="nav-number">3.4.</span> <span class="nav-text">Transfer-Encoding:chunked：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Location："><span class="nav-number">3.5.</span> <span class="nav-text">Location：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#User-Agent："><span class="nav-number">3.6.</span> <span class="nav-text">User-Agent：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Range-Accept-Range："><span class="nav-number">3.7.</span> <span class="nav-text">Range/Accept-Range：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Cookie-Set-Cookie："><span class="nav-number">3.8.</span> <span class="nav-text">Cookie/Set-Cookie：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Authorization："><span class="nav-number">3.9.</span> <span class="nav-text">Authorization：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#其它"><span class="nav-number">3.10.</span> <span class="nav-text">其它</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对RESTful"><span class="nav-number">4.</span> <span class="nav-text">对RESTful</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">qinglie</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</body>
+</html>
