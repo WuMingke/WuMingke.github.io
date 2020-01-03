@@ -290,125 +290,6 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/03/在线英语学习：leakcanary源码分析（v2-1）-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="qinglie">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="是救不了的患者">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/01/03/在线英语学习：leakcanary源码分析（v2-1）-1/" itemprop="url">在线英语学习：leakcanary源码分析（v2.1）</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-01-03T12:50:54+08:00">
-                2020-01-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/03/在线英语学习：leakcanary源码分析（v2-1）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -479,62 +360,16 @@
 
       
         
-          
-            <figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">debugImplementation</span> <span class="string">'com.squareup.leakcanary:leakcanary-android:2.1'</span></span><br></pre></td></tr></table></figure>
+          <figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">debugImplementation</span> <span class="string">'com.squareup.leakcanary:leakcanary-android:2.1'</span></span><br></pre></td></tr></table></figure>
 
-<p>通过build.gradle依赖，拿到包结构：<br><img src="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p6" alt="5bb2bdc54eec2bf7cab6a522962695ac.png"><br><img src="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p8" alt="23ea00d400101d0459a9ca70fbab3bf4.png"><br>使用时，无需在Application中写初始化代码（事实上也没有这样的API了）。<br><img src="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p7" alt="2463e2a9ed9a7cfd2b802d31595f9cf1.png"><br>所以只需要添加依赖，就可以使用leakcanary了。</p>
-<p>这时leakcanary是如何install、检查、判断泄漏、分析、展示的呢？</p>
-<p>基本原理：在Activity或Fragment被销毁后, 将他们的引用包装成一个WeakReference, 然后将这个WeakReference关联到一个ReferenceQueue。查看ReferenceQueue中是否含有Activity或Fragment的引用，如果有，触发GC，再次查看，还是有的话就说明没有回收成功，可能发生了泄露。这时候开始dump内存的信息,并分析泄露的引用链。</p>
-<h3 id="一、install"><a href="#一、install" class="headerlink" title="一、install"></a>一、install</h3><p>直接点进LeakCanary，首先可以看到：</p>
-<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">The entry point API <span class="keyword">for</span> LeakCanary. LeakCanary builds <span class="keyword">on</span> top <span class="keyword">of</span> [AppWatcher]. AppWatcher notifies LeakCanary <span class="keyword">of</span> retained instances, which <span class="keyword">in</span> turns dumps <span class="keyword">the</span> heap, analyses <span class="keyword">it</span> <span class="keyword">and</span> publishes <span class="keyword">the</span> results.</span><br><span class="line"></span><br><span class="line">LeakCanary can be configured <span class="keyword">by</span> updating [config].</span><br></pre></td></tr></table></figure>
-
-<p>LeakCanary的入口API。LeakCanary建立在[AppWatcher]之上。AppWatcher将保留的实例通知LeakCanary, LeakCanary随后转储堆，分析堆并发布结果。</p>
-<p>可以通过更新[config]来配置LeakCanary。</p>
-<p>所以先看下config，发现有：</p>
-<figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Volatile</span><br><span class="line"><span class="keyword">var</span> config: <span class="type">Config </span>= <span class="keyword">if</span>(AppWatcher.isInstalled) Config() <span class="keyword">else</span> InternalLeakCanary.noInstallConfig</span><br><span class="line">    <span class="keyword">set</span>(<span class="keyword">new</span><span class="type">Config</span>) &#123;</span><br><span class="line">      val previousConfig = field</span><br><span class="line">      field = <span class="keyword">new</span><span class="type">Config</span></span><br><span class="line"><span class="type"></span>      logConfigChange(previousConfig, <span class="keyword">new</span><span class="type">Config</span>)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>如果AppWatcher.isInstalled为true，则使用默认的配置信息，否则，返回一个空的配置信息。<br>顺势点进isInstalled：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">AppWatcher.kt:</span><br><span class="line">  <span class="comment">/** <span class="doctag">@see</span> [manualInstall] */</span></span><br><span class="line">  <span class="keyword">val</span> isInstalled</span><br><span class="line">    <span class="keyword">get</span>() = InternalAppWatcher.isInstalled</span><br></pre></td></tr></table></figure>
-
-<p>得到的是一个InternalAppWatcher.isInstalled，这个参数是：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">InternalAppWatcher.kt:</span><br><span class="line">  <span class="keyword">val</span> isInstalled</span><br><span class="line">    <span class="keyword">get</span>() = ::application.isInitialized</span><br><span class="line">    </span><br><span class="line">Returns `<span class="literal">true</span>` <span class="keyword">if</span> <span class="keyword">this</span> <span class="keyword">lateinit</span> property has been assigned a value, and `<span class="literal">false</span>` otherwise.</span><br></pre></td></tr></table></figure>
-
-<p>所以这里总是true的，没有发现其它赋值的地方，还是不知道如何install的。退回到AppWatcher.kt的isInstalled，发现有一个@see [manualInstall]：</p>
-<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">AppWatcher.kt:</span><br><span class="line"> /**</span><br><span class="line">   * [AppWatcher] <span class="keyword">is</span> automatically installed <span class="keyword">on</span> main process start <span class="keyword">by</span></span><br><span class="line">   * [leakcanary.internal.AppWatcherInstaller] which <span class="keyword">is</span> registered <span class="keyword">in</span> <span class="keyword">the</span> AndroidManifest.xml <span class="keyword">of</span></span><br><span class="line">   * your app. If you disabled [leakcanary.internal.AppWatcherInstaller] <span class="keyword">or</span> you need AppWatcher</span><br><span class="line">   * <span class="keyword">or</span> LeakCanary <span class="keyword">to</span> <span class="built_in">run</span> outside <span class="keyword">of</span> <span class="keyword">the</span> main process <span class="keyword">then</span> you can call this method <span class="keyword">to</span> install</span><br><span class="line">   * [AppWatcher].</span><br><span class="line">   */</span><br><span class="line">  fun manualInstall(<span class="built_in">application</span>: Application) = InternalAppWatcher.install(<span class="built_in">application</span>)</span><br></pre></td></tr></table></figure>
-
-<p>如果AppWatcherInstaller在AndroidManifest.xml注册，那么它就在主线程中自动创建了。查看leakcanary-object-watcher-android的AndroidManifest.xml：</p>
-<figure class="highlight dust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">application</span>&gt;</span></span></span><br><span class="line"><span class="xml">   <span class="tag">&lt;<span class="name">provider</span></span></span></span><br><span class="line"><span class="xml">       android:name="leakcanary.internal.AppWatcherInstaller$MainProcess"</span></span><br><span class="line"><span class="xml">       android:authorities="$</span><span class="template-variable">&#123;applicationId&#125;</span><span class="xml">.leakcanary-installer"</span></span><br><span class="line"><span class="xml">       android:exported="false"/&gt;</span></span><br><span class="line"><span class="xml"> <span class="tag">&lt;/<span class="name">application</span>&gt;</span></span></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">InternalAppWatcher.kt:</span><br><span class="line"><span class="keyword">internal</span> <span class="keyword">sealed</span> <span class="class"><span class="keyword">class</span> <span class="title">AppWatcherInstaller</span> : <span class="type">ContentProvider</span></span>() &#123;</span><br><span class="line">    ...  </span><br><span class="line">      <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * [MainProcess] automatically sets up the LeakCanary code that runs in the main app process.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">internal</span> <span class="class"><span class="keyword">class</span> <span class="title">MainProcess</span> : <span class="type">AppWatcherInstaller</span></span>()</span><br><span class="line">  </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">()</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> application = context!!.applicationContext <span class="keyword">as</span> Application</span><br><span class="line">    InternalAppWatcher.install(application)</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>发现AppWatcherInstaller是一个ContentProvider！！</p>
-<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Content providers are loaded <span class="keyword">before</span> <span class="keyword">the</span> <span class="built_in">application</span> <span class="built_in">class</span> <span class="keyword">is</span> created. [AppWatcherInstaller] <span class="keyword">is</span> used <span class="keyword">to</span> install [leakcanary.AppWatcher] <span class="keyword">on</span> <span class="built_in">application</span> start.</span><br></pre></td></tr></table></figure>
-
-<p>这样，在Application的onCreate方法调用之前，LeakCanary就可以被初始化。至于应用图标，在leakcanary-android-core的AndroidManifest.xml可以看到，它采用<activity-alias>的方式设置了。<br>在install的时候，完成了监控的注册，建立生命周期回调：</activity-alias></p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">install</span><span class="params">(application: <span class="type">Application</span>)</span></span> &#123;</span><br><span class="line">  SharkLog.logger = DefaultCanaryLog()</span><br><span class="line">  SharkLog.d &#123; <span class="string">"Installing AppWatcher"</span> &#125;</span><br><span class="line">  checkMainThread()</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>::application.isInitialized) &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line">  InternalAppWatcher.application = application</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> configProvider = &#123; AppWatcher.config &#125;</span><br><span class="line"> <span class="comment">// Activity destroy方法监控注册 ActivityDestroyWatcher.install(application, objectWatcher, configProvider)</span></span><br><span class="line"> <span class="comment">// Fragment destroy方法监控注册 FragmentDestroyWatcher.install(application, objectWatcher, configProvider)</span></span><br><span class="line">  onAppWatcherInstalled(application)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="二、泄漏监控："><a href="#二、泄漏监控：" class="headerlink" title="二、泄漏监控："></a>二、泄漏监控：</h3><p>在生命周期回调中，通过ObjectWatcher的watch方法，实现监控流程：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">以ActivityDestroyWatcher为例：</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> lifecycleCallbacks =</span><br><span class="line">    <span class="keyword">object</span> : Application.ActivityLifecycleCallbacks <span class="keyword">by</span> noOpDelegate() &#123;</span><br><span class="line">      <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onActivityDestroyed</span><span class="params">(activity: <span class="type">Activity</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (configProvider().watchActivities) &#123;</span><br><span class="line">          objectWatcher.watch(</span><br><span class="line">              activity, <span class="string">"<span class="subst">$&#123;activity::class.java.name&#125;</span> received Activity#onDestroy() callback"</span></span><br><span class="line">          )</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>[ObjectWatcher]可以将对象传递给[watch]。它将创建引用观察对象的[KeyedWeakReference]实例，并检查那些引用是否按照预期在[checkRetainedExecutor] executor上被清除。如果没有，则认为保留了这些对象然后[ObjectWatcher]将在执行线程上通知[onObjectRetainedListener]。<br>[checkRetainedExecutor]被期望在一个后台线程上运行它的任务，这对于GC有机会识别弱引用是很重要的。<br>[ObjectWatcher]是线程安全的。</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Synchronized</span> <span class="function"><span class="keyword">fun</span> <span class="title">watch</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    watchedObject: <span class="type">Any</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">    description: <span class="type">String</span></span></span></span><br><span class="line"><span class="function"><span class="params">  )</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!isEnabled()) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 移除已经回收的监听对象</span></span><br><span class="line">    removeWeaklyReachableObjects()</span><br><span class="line">    <span class="keyword">val</span> key = UUID.randomUUID()</span><br><span class="line">        .toString()</span><br><span class="line">    <span class="keyword">val</span> watchUptimeMillis = clock.uptimeMillis()</span><br><span class="line">    <span class="comment">// 构造KeyedWeakReference 用来监听目标对象</span></span><br><span class="line">    <span class="keyword">val</span> reference =</span><br><span class="line">      KeyedWeakReference(watchedObject, key, description, watchUptimeMillis, queue)</span><br><span class="line">    SharkLog.d &#123;</span><br><span class="line">      <span class="string">"Watching "</span> +</span><br><span class="line">          (<span class="keyword">if</span> (watchedObject <span class="keyword">is</span> Class&lt;*&gt;) watchedObject.toString() <span class="keyword">else</span> <span class="string">"instance of <span class="subst">$&#123;watchedObject.javaClass.name&#125;</span>"</span>) +</span><br><span class="line">          (<span class="keyword">if</span> (description.isNotEmpty()) <span class="string">" (<span class="variable">$description</span>)"</span> <span class="keyword">else</span> <span class="string">""</span>) +</span><br><span class="line">          <span class="string">" with key <span class="variable">$key</span>"</span></span><br><span class="line">    &#125;</span><br><span class="line">     <span class="comment">// 存储 key + reference</span></span><br><span class="line">    watchedObjects[key] = reference</span><br><span class="line">    checkRetainedExecutor.execute &#123;</span><br><span class="line">      <span class="comment">// 执行 没有回收流程</span></span><br><span class="line">      moveToRetained(key)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Synchronized</span> <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">moveToRetained</span><span class="params">(key: <span class="type">String</span>)</span></span> &#123;</span><br><span class="line">   <span class="comment">// 再次移除被回收的对象</span></span><br><span class="line">  removeWeaklyReachableObjects()</span><br><span class="line">  <span class="keyword">val</span> retainedRef = watchedObjects[key]</span><br><span class="line">   <span class="comment">// 如果没有被回收 则开始执行对象未被回收流程</span></span><br><span class="line">  <span class="keyword">if</span> (retainedRef != <span class="literal">null</span>) &#123;</span><br><span class="line">    retainedRef.retainedUptimeMillis = clock.uptimeMillis()</span><br><span class="line">    onObjectRetainedListeners.forEach &#123; it.onObjectRetained() &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在InternalLeakCanary.kt中找到这个方法：</p>
-<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onObjectRetained</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>::heapDumpTrigger.isInitialized) &#123;</span><br><span class="line">    heapDumpTrigger.onObjectRetained()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>一步步调到HeapDumpTrigger的checkRetainedObjects方法：</p>
-<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (retainedReferenceCount &gt; <span class="number">0</span>) &#123;</span><br><span class="line">     gcTrigger.runGc()</span><br><span class="line">     retainedReferenceCount = objectWatcher.retainedObjectCount</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<p>触发GC，对象仍未被回收，开始dump</p>
-<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">dumpHeap</span><span class="params">(retainedReferenceCount, retry = true)</span></span></span><br></pre></td></tr></table></figure>
-
-<p>该方法主要是将泄漏信息dump到file，然后启动Service开始分析：</p>
-<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HeapAnalyzerService.runAnalysis(<span class="built_in">application</span>, heapDumpFile)</span><br></pre></td></tr></table></figure>
-
-<h3 id="三、分析流程："><a href="#三、分析流程：" class="headerlink" title="三、分析流程："></a>三、分析流程：</h3><h3 id="四、展示流程："><a href="#四、展示流程：" class="headerlink" title="四、展示流程："></a>四、展示流程：</h3>
-          
+<p>通过build.gradle依赖，拿到包结构：</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/01/03/在线英语学习：leakcanary源码分析（v2-1）/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -939,6 +774,9 @@
       
         
           <p>20191115-徐海俏-《空》live</p>
+<blockquote>
+<p>不过是大梦一场空<br>不过是孤影照惊鸿<br>不过是白驹之过一场梦<br>梦里有一些相逢</p>
+</blockquote>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2019/11/16/空/#more" rel="contents">
@@ -1461,7 +1299,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

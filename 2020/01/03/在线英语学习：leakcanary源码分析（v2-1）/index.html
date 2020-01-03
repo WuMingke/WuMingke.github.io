@@ -94,22 +94,22 @@
 
 
 
-<meta name="description" content="1debugImplementation &apos;com.squareup.leakcanary:leakcanary-android:2.1&apos;  通过build.gradle依赖，拿到包结构：使用时，无需在Application中写初始化代码（事实上也没有这样的API了）。所以只需要添加依赖，就可以使用leakcanary了。 这时leakcanary是如何install、检查、判断泄漏、分析、展示的">
+<meta name="description" content="1debugImplementation &apos;com.squareup.leakcanary:leakcanary-android:2.1&apos;  通过build.gradle依赖，拿到包结构：">
 <meta name="keywords" content="keywords1 keywords2">
 <meta property="og:type" content="article">
 <meta property="og:title" content="在线英语学习：leakcanary源码分析（v2.1）">
 <meta property="og:url" content="http://yoursite.com/2020/01/03/在线英语学习：leakcanary源码分析（v2-1）/index.html">
 <meta property="og:site_name" content="是救不了的患者">
-<meta property="og:description" content="1debugImplementation &apos;com.squareup.leakcanary:leakcanary-android:2.1&apos;  通过build.gradle依赖，拿到包结构：使用时，无需在Application中写初始化代码（事实上也没有这样的API了）。所以只需要添加依赖，就可以使用leakcanary了。 这时leakcanary是如何install、检查、判断泄漏、分析、展示的">
+<meta property="og:description" content="1debugImplementation &apos;com.squareup.leakcanary:leakcanary-android:2.1&apos;  通过build.gradle依赖，拿到包结构：">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p6">
-<meta property="og:image" content="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p8">
-<meta property="og:image" content="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p7">
-<meta property="og:updated_time" content="2020-01-03T04:53:22.961Z">
+<meta property="og:image" content="http://yoursite.com/images/leakcanary.png">
+<meta property="og:image" content="http://yoursite.com/images/l3.png">
+<meta property="og:image" content="http://yoursite.com/images/l2.png">
+<meta property="og:updated_time" content="2020-01-03T04:59:59.576Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="在线英语学习：leakcanary源码分析（v2.1）">
-<meta name="twitter:description" content="1debugImplementation &apos;com.squareup.leakcanary:leakcanary-android:2.1&apos;  通过build.gradle依赖，拿到包结构：使用时，无需在Application中写初始化代码（事实上也没有这样的API了）。所以只需要添加依赖，就可以使用leakcanary了。 这时leakcanary是如何install、检查、判断泄漏、分析、展示的">
-<meta name="twitter:image" content="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p6">
+<meta name="twitter:description" content="1debugImplementation &apos;com.squareup.leakcanary:leakcanary-android:2.1&apos;  通过build.gradle依赖，拿到包结构：">
+<meta name="twitter:image" content="http://yoursite.com/images/leakcanary.png">
 
 
 
@@ -362,7 +362,9 @@
       
         <figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">debugImplementation</span> <span class="string">'com.squareup.leakcanary:leakcanary-android:2.1'</span></span><br></pre></td></tr></table></figure>
 
-<p>通过build.gradle依赖，拿到包结构：<br><img src="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p6" alt="5bb2bdc54eec2bf7cab6a522962695ac.png"><br><img src="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p8" alt="23ea00d400101d0459a9ca70fbab3bf4.png"><br>使用时，无需在Application中写初始化代码（事实上也没有这样的API了）。<br><img src="evernotecid://2922B837-15FF-478E-872B-BD26B9262C7D/appyinxiangcom/24912936/ENResource/p7" alt="2463e2a9ed9a7cfd2b802d31595f9cf1.png"><br>所以只需要添加依赖，就可以使用leakcanary了。</p>
+<p>通过build.gradle依赖，拿到包结构：</p>
+<a id="more"></a>
+<p><img src="/images/leakcanary.png" alt><br><img src="/images/l3.png" alt><br>使用时，无需在Application中写初始化代码（事实上也没有这样的API了）。<br><img src="/images/l2.png" alt><br>所以只需要添加依赖，就可以使用leakcanary了。</p>
 <p>这时leakcanary是如何install、检查、判断泄漏、分析、展示的呢？</p>
 <p>基本原理：在Activity或Fragment被销毁后, 将他们的引用包装成一个WeakReference, 然后将这个WeakReference关联到一个ReferenceQueue。查看ReferenceQueue中是否含有Activity或Fragment的引用，如果有，触发GC，再次查看，还是有的话就说明没有回收成功，可能发生了泄露。这时候开始dump内存的信息,并分析泄露的引用链。</p>
 <h3 id="一、install"><a href="#一、install" class="headerlink" title="一、install"></a>一、install</h3><p>直接点进LeakCanary，首先可以看到：</p>
@@ -447,10 +449,6 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2020/01/03/在线英语学习：leakcanary源码分析（v2-1）-1/" rel="prev" title="在线英语学习：leakcanary源码分析（v2.1）">
-                在线英语学习：leakcanary源码分析（v2.1） <i class="fa fa-chevron-right"></i>
-              </a>
-            
           </div>
         </div>
       
@@ -524,7 +522,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
